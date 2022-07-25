@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: download-server
+spec:
+  selector:
+    matchLabels:
+      app: download-server
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: download-server
+    spec:
+      containers:
+        - name: download-server
+          image: ghcr.io/autodarts/download-server:${VERSION}
+          ports:
+            - containerPort: 9090
+          imagePullPolicy: Always
+      volumes:
+        - name: config-volume
+          configMap:
+            name: google-cloud-service-account
+      imagePullSecrets:
+        - name: github-autodarts
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: download-server
+spec:
+  selector:
+    app: download-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: download-server
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/tls-acme: "true"
+spec:
+  rules:
+    - host: get.autodarts.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: download-server
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - get.autodarts.io
+      secretName: autodarts-get-tls
