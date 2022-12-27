@@ -14,14 +14,10 @@ spec:
     spec:
       containers:
         - name: download-server
-          image: ghcr.io/autodarts/download-server:${VERSION}
+          image: ghcr.io/autodarts/download-server
           ports:
             - containerPort: 9090
           imagePullPolicy: Always
-      volumes:
-        - name: config-volume
-          configMap:
-            name: google-cloud-service-account
       imagePullSecrets:
         - name: github-autodarts
 ---
@@ -42,7 +38,7 @@ kind: Ingress
 metadata:
   name: download-server
   annotations:
-    kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: traefik
     cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/tls-acme: "true"
 spec:

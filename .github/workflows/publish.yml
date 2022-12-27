@@ -1,0 +1,50 @@
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Go build
+        run: go build -v -o .bin/main main.go
+
+      - name: Get tag
+        run: echo "version=${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Docker login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/autodarts/download-server:latest
+            ghcr.io/autodarts/download-server:${{ env.version }}
+
+      - uses: azure/setup-kubectl@v3
+      - uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+      - name: Get tag
+        run: echo "version=${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: Azure/k8s-deploy@v4
+        with:
+          namespace: autodarts
+          pull-images: false
+          manifests: |
+            deployment.yaml
+          images: ghcr.io/autodarts/download-server:${{ env.version }}

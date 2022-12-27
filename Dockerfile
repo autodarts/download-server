@@ -1,5 +1,4 @@
 FROM alpine
-
-COPY ./.bin/main-linux /main
-
-CMD ./main
+RUN apk add --update-cache gcompat
+COPY ./.bin/main /main
+CMD ["./main"]
