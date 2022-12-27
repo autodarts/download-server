@@ -1,0 +1,66 @@
+name: Build & Deploy
+
+on:
+  push:
+    tags:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get version from git tag
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: echo "version=${BRANCH##*/}" >> $GITHUB_ENV
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          cache: true
+
+      - name: Go build
+        run: go build -v -o .bin/main main.go
+
+      - name: Docker login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/autodarts/download-server:latest
+            ghcr.io/autodarts/download-server:${{ env.version }}
+
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: azure/setup-kubectl@v3
+      - uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Get version from git tag
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: echo "version=${BRANCH##*/}" >> $GITHUB_ENV
+
+      - uses: Azure/k8s-deploy@v4
+        with:
+          namespace: autodarts
+          manifests: |
+            deployment.yaml
+          images: ghcr.io/autodarts/download-server:${{ env.version }}
