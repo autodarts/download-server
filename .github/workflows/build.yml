@@ -2,8 +2,9 @@ name: Build & Deploy
 
 on:
   push:
-    tags:
-      - '*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -12,10 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Get version from git tag
-        env:
-          BRANCH: ${{ github.ref_name }}
-        run: echo "version=${BRANCH##*/}" >> $GITHUB_ENV
+      - name: Get tag
+        run: echo "version=${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}" >> $GITHUB_ENV
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -54,10 +53,8 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
-      - name: Get version from git tag
-        env:
-          BRANCH: ${{ github.ref_name }}
-        run: echo "version=${BRANCH##*/}" >> $GITHUB_ENV
+      - name: Get tag
+        run: echo "version=${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}" >> $GITHUB_ENV
 
       - uses: Azure/k8s-deploy@v4
         with:
