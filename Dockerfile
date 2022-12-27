@@ -1,5 +1,5 @@
 FROM alpine
 
-COPY ./.bin/main-linux /main
+COPY ./.bin/main /main
 
 CMD ./main
