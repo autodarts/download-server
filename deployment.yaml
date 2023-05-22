@@ -41,7 +41,6 @@ metadata:
     kubernetes.io/ingress.class: traefik
     cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/tls-acme: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: autodarts-https-redirect@kubernetescrd
 spec:
   rules:
     - host: get.autodarts.io
