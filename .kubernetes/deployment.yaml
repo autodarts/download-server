@@ -43,7 +43,7 @@ metadata:
     kubernetes.io/tls-acme: "true"
 spec:
   rules:
-    - host: get2.autodarts.io
+    - host: get.autodarts.io
       http:
         paths:
           - path: /
@@ -55,5 +55,5 @@ spec:
                   number: 80
   tls:
     - hosts:
-        - get2.autodarts.io
+        - get.autodarts.io
       secretName: autodarts-get-tls
