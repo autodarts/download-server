@@ -30,6 +30,7 @@ jobs:
         with:
           context: .
           push: true
+          file: .docker/Dockerfile
           tags: |
             ghcr.io/autodarts/download-server:latest
             ghcr.io/autodarts/download-server:${{ env.version }}
